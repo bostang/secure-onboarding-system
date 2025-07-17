@@ -1,0 +1,9 @@
+[submodule "verificator-secure-onboarding-system"]
+	path = verificator-secure-onboarding-system
+	url = https://github.com/bostang/verificator-secure-onboarding-system
+[submodule "backend-secure-onboarding-system"]
+	path = backend-secure-onboarding-system
+	url = https://github.com/bostang/backend-secure-onboarding-system
+[submodule "frontend-secure-onboarding-system"]
+	path = frontend-secure-onboarding-system
+	url = https://github.com/alvarolt17/frontend-secure-onboarding-system
