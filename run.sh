@@ -65,7 +65,7 @@ run_in_new_tab() { # Nama fungsi sudah diperbaiki di sini
             echo "Memberikan izin eksekusi untuk setup.sh di ${component_name}..."
             COMMAND+="chmod +x setup.sh && "
         fi
-        COMMAND+="$install_cmd && touch .${component_name}_installed && "
+        COMMAND+="$install_cmd
     else
         echo "Dependensi ${component_name} sudah terinstal (berdasarkan flag .${component_name}_installed)."
     fi
