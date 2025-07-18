@@ -1,6 +1,10 @@
 # secure-onboarding-system
 
-## Cara Menjalankan
+## Cara Menjalankan Aplikasi (Local)
+
+### Cara Otomatis
+
+> dapat digunakan pada OS linux/ UNIX (MAC OS)
 
 ```bash
 # pastikan bahwa setiap submodul (frontend, backend, verifikator) sudah terupdate
@@ -10,11 +14,11 @@
 ./run.sh
 ```
 
-## CARA MANUAL Menjalankan (bila script gagal)
+### CARA MANUAL Menjalankan (bila script gagal)
 
 Untuk menjalankan setiap komponen proyek Anda secara manual, Anda perlu membuka terminal terpisah untuk masing-masing layanan. Pastikan Anda memulai dari direktori `secure-onboarding-system` (root repositori induk Anda).
 
-### **1. Menjalankan Frontend**
+#### **1. Menjalankan Frontend**
 
 Frontend adalah aplikasi web yang akan berinteraksi dengan pengguna.
 
@@ -39,7 +43,7 @@ Frontend adalah aplikasi web yang akan berinteraksi dengan pengguna.
     npm run dev
     ```
 
-### **2. Menjalankan Backend**
+#### **2. Menjalankan Backend**
 
 Backend adalah layanan utama yang menyediakan API dan logika bisnis.
 
@@ -59,7 +63,7 @@ Backend adalah layanan utama yang menyediakan API dan logika bisnis.
 
     *Catatan: Pastikan `setup.sh` memiliki izin eksekusi (`chmod +x setup.sh`) jika Anda mendapatkan error "Permission denied".*
 
-### **3. Menjalankan Verifikator**
+#### **3. Menjalankan Verifikator**
 
 Verifikator adalah layanan terpisah yang mungkin bertanggung jawab untuk proses verifikasi atau otentikasi.
 
@@ -78,3 +82,47 @@ Verifikator adalah layanan terpisah yang mungkin bertanggung jawab untuk proses 
     ```
 
     *Catatan: Pastikan `setup.sh` memiliki izin eksekusi (`chmod +x setup.sh`) jika Anda mendapatkan error "Permission denied".*
+
+## Desain Sistem
+
+### High-level Architecture
+
+![high-level-architecture](./img/high-level-architecture.png)
+
+### Blok Diagram
+
+#### Level 1
+
+![block-diagram-level-1](./img/block-diagram-level-1.png)
+
+#### Level 2
+
+![block-diagram-level-2](./img/block-diagram-level-2.png)
+
+#### Level 3
+
+![block-diagram-level-3](./img/block-diagram-level-3.png)
+
+#### Level 4
+
+![block-diagram-level-4](./img/block-diagram-level-4.png)
+
+### Entity Relationship Diagram (ERD)
+
+![entity-relationship-diagram](./img/entity-relationship-diagram.png)
+
+### Kubernetes Architecture Design
+
+![k8s-architecture-design](./img/k8s-architecture-design.png)
+
+### Tech Stack
+
+![tech-stack](./img/tech-stack.png)
+
+### Use Case Diagram
+
+![use-case-diagram](./img/use-case-diagram.png)
+
+### Desain Repositori
+
+![repo-strategy](./img/repo-strategy.png)
