@@ -9,7 +9,7 @@
 SUBMODULES=(
     "verificator-secure-onboarding-system:main"
     "backend-secure-onboarding-system:develop"
-    "frontend-secure-onboarding-system:feature/login"
+    "frontend-secure-onboarding-system:feature/otp"
 )
 
 # ---

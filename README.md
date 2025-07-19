@@ -7,6 +7,9 @@
 > dapat digunakan pada OS linux/ UNIX (MAC OS)
 
 ```bash
+# ketika pertama kali melakukan git clone terhadap repository ini, tambahkan dulu submodule
+./add_submodules.sh
+
 # pastikan bahwa setiap submodul (frontend, backend, verifikator) sudah terupdate
 ./update_submodules.sh
 
