@@ -1,5 +1,32 @@
 # secure-onboarding-system
 
+## Catatan Penting
+
+Pastikan pada `frontend-secure-onboarding-system` dan `backend-secure-onboarding-system` masing-masing sudah terdapat `.env` yang diperlukan.
+
+Contoh `.env` untuk frontend:
+
+```conf
+VITE_FIREBASE_API_KEY=xxx
+VITE_FIREBASE_AUTH_DOMAIN=xxx
+VITE_FIREBASE_PROJECT_ID=xxx
+VITE_FIREBASE_STORAGE_BUCKET=xxx
+VITE_FIREBASE_MESSAGING_SENDER_ID=xxx
+VITE_FIREBASE_APP_ID=xxx
+```
+
+Contoh `.env` untuk backend:
+
+```conf
+DB_URL=jdbc:postgresql://localhost:5432/customer_registration
+DB_USERNAME=postgres
+DB_PASSWORD=password
+JWT_SECRET=xxx
+JWT_EXPIRATION=86400000
+SERVER_PORT=8080
+FIREBASE_CONFIG_PATH="model-xxx.json"
+```
+
 ## Cara Menjalankan Aplikasi (Local)
 
 ### Cara Otomatis
