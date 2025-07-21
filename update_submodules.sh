@@ -10,6 +10,10 @@ SUBMODULES=(
     "verificator-secure-onboarding-system:main"
     "backend-secure-onboarding-system:feature/otp"
     "frontend-secure-onboarding-system:feature/otp"
+    "ops-secure-onboarding-system:master"
+    # TAMBAHKAN SUBMODULE LAINNYA DI SINI
+    # "nama-submodule:branch-nama"
+    # ...
 )
 
 # ---
