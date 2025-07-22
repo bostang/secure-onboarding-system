@@ -207,8 +207,7 @@ spring.jpa.properties.hibernate.jdbc.batch_versioned_data=true
 sudah dilampirkan pada file `owasp-checklist.xlsx`.
 
 ## CI/CD Pipeline using Jenkins
-
-[Jenkinsfile](https://github.com/bostang/secure-onboarding-system/blob/main/Jenkinsfile)
+File [Jenkinsfile](https://github.com/bostang/secure-onboarding-system/blob/main/Jenkinsfile) dijalankan pada https://jenkins.andrc1613.my.id/
 
 - **Flow Continuous Integration (CI) Pipeline**:
 
