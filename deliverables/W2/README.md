@@ -216,7 +216,7 @@ Flow Continuous Integration (CI) Pipeline:
 4. Static Code Analysis (SAST) via SonarQube the backend code.
 
 Flow Continuous Deployment (CD) Pipeline:
-5. Build frontend, backend, and verificator code docker image and push that image to Google Container Registry (GCR).
-6. Checkout terraform configruation to deploy Google Kubernetes Engine (GKE) from GitHub.
-7. Applying terraform for GKE deployment.
+1. Build frontend, backend, and verificator code docker image and push that image to Google Container Registry (GCR).
+2. Checkout terraform configruation to deploy Google Kubernetes Engine (GKE) from GitHub.
+3. Applying terraform for GKE deployment.
 
