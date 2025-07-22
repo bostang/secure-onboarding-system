@@ -1,28 +1,20 @@
-version: '3.8'
-
 services:
   # Database untuk Backend
   db_backend:
     image: postgres:17
-    container_name: db_main # Mengikuti nama dari contoh docker-compose sebelumnya
+    container_name: db_main
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: user_db # Nama DB yang digunakan backend, sesuaikan dengan database_setup_FIXED.sql jika berbeda
+      POSTGRES_DB: customer_registration
     volumes:
+      # Memasang skrip inisialisasi database dari folder backend
       - db_backend_data:/var/lib/postgresql/data
-      # Perhatikan jalur skrip SQL yang benar dari struktur proyek Anda
-      - ./backend-secure-onboarding-system/sql/database_setup_FIXED.sql:/docker-entrypoint-initdb.d/init.sql
-      # clean_db.sql akan dijalankan setelah init.sql jika ada di /docker-entrypoint-initdb.d/
-      # Namun, untuk init.sql, biasanya hanya satu yang digunakan.
-      # Jika clean_db.sql perlu dijalankan setelah inisialisasi awal, mungkin lebih baik
-      # dilakukan secara manual atau melalui skrip start-up aplikasi backend jika diperlukan
-      # untuk setiap run, atau digabungkan ke database_setup_FIXED.sql jika tujuannya adalah state awal.
-      # Untuk saat ini, saya hanya menyertakan database_setup_FIXED.sql sebagai inisialisasi.
+      - ./backend-secure-onboarding-system/sql/database_setup_DOCKER.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5433:5432" # Mapping port ke host, agar bisa diakses dari lokal host jika diperlukan
+      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"] # Uji koneksi ke DB spesifik
+      test: ["CMD-SHELL", "pg_isready -U postgres -d customer_registration"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -32,19 +24,19 @@ services:
   # Database untuk Verifikator
   db_verifikator:
     image: postgres:17
-    container_name: db_validator # Mengikuti nama dari contoh docker-compose sebelumnya
+    container_name: db_validator
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: nik_db # Nama DB yang digunakan verifikator
+      POSTGRES_DB: dukcapil_ktp
     volumes:
+      # Memasang skrip inisialisasi database dari folder verifikator
       - db_verifikator_data:/var/lib/postgresql/data
-      # Perhatikan jalur skrip SQL yang benar dari struktur proyek Anda
-      - ./verificator-secure-onboarding-system/sql/database_fix.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./verificator-secure-onboarding-system/sql/database_DOCKER.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5434:5432" # Mapping port ke host
+      - "5434:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nik_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dukcapil_ktp"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -54,65 +46,57 @@ services:
   # Layanan Backend
   backend:
     build:
-      context: ./backend-secure-onboarding-system
-      dockerfile: Dockerfile
-    container_name: backend # Nama container mengikuti contoh sebelumnya
+      context: ./backend-secure-onboarding-system # Konteks build adalah direktori layanan backend
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
+    container_name: backend
     ports:
-      - "8083:8080" # Mapping ke port 8083 di host, Spring Boot default 8080
+      - "8083:8080"
     environment:
-      # Perbarui URL database agar menunjuk ke layanan db_backend di dalam jaringan Docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db_backend:5432/customer_registration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db_main:5432/customer_registration
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8080 # Konfigurasi port aplikasi Spring Boot di dalam container
-      JWT_SECRET: mySecretKey123456789mySecretKey123456789 # Ambil dari skrip lokal Anda
-      JWT_EXPIRATION: 86400000 # Ambil dari skrip lokal Anda
+      SERVER_PORT: 8080
+      JWT_SECRET: superSecretKeyForHS512AlgorithmThatIsAtLeastSixtyFourCharactersLongForStrongSecurity12345!@#$%^&*()
+      JWT_EXPIRATION: 86400000
     depends_on:
       db_backend:
-        condition: service_healthy # Pastikan DB siap sebelum backend dimulai
+        condition: service_healthy
     networks:
       - secure-onboarding-network
 
-  # Layanan Verifikator (Menggunakan nama 'verifikator' sesuai struktur folder Anda)
+  # Layanan Verifikator
   verifikator:
     build:
-      context: ./verificator-secure-onboarding-system
-      dockerfile: Dockerfile
-    container_name: external_validator # Mengikuti nama container dari contoh sebelumnya
+      context: ./verificator-secure-onboarding-system # Konteks build adalah direktori layanan verifikator
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
+    container_name: external_validator
     ports:
-      - "8082:8081" # Mapping ke port 8082 di host, asumsi verifikator berjalan di 8081
+      - "8082:8081"
     environment:
-      # Perbarui URL database agar menunjuk ke layanan db_verifikator di dalam jaringan Docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db_verifikator:5432/dukcapil_ktp
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db_validator:5432/dukcapil_ktp
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8081 # Asumsi verifikator berjalan di port ini
+      SERVER_PORT: 8081
     depends_on:
       db_verifikator:
-        condition: service_healthy # Pastikan DB siap sebelum verifikator dimulai
+        condition: service_healthy
     networks:
       - secure-onboarding-network
 
   # Layanan Frontend
   frontend:
     build:
-      context: ./frontend-secure-onboarding-system
-      dockerfile: Dockerfile
-    container_name: frontend # Nama container
+      context: ./frontend-secure-onboarding-system # Konteks build adalah direktori layanan frontend
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
+    container_name: frontend
     ports:
-      - "3000:80" # Akses frontend di port 3000 host, di container di port 80 (Nginx)
+      - "3000:80"
     environment:
-      # URL API backend dan verifikator untuk frontend
-      # Jika frontend diakses dari browser host, gunakan localhost dengan port yang dipetakan
       VITE_API_BASE_URL_BACKEND: http://localhost:8083
       VITE_API_BASE_URL_VERIFICATOR: http://localhost:8082
-      # Jika frontend diakses dari dalam container lain (misalnya melalui reverse proxy),
-      # Anda bisa menggunakan nama layanan:
-      # VITE_API_BASE_URL_BACKEND: http://backend:8080
-      # VITE_API_BASE_URL_VERIFICATOR: http://verifikator:8081
     depends_on:
       - backend
-      - verifikator # Frontend tergantung pada backend dan verifikator
+      - verifikator
     networks:
       - secure-onboarding-network
 
