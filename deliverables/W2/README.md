@@ -9,6 +9,7 @@
 - [X] github repo
 - [X] `owasp-checklist.xlsx`
 - [x] `Jenkinsfile`
+- [X] `deployment-report.pdf`
 
 ## Database Schema
 
@@ -209,6 +210,8 @@ sudah dilampirkan pada file `owasp-checklist.xlsx`.
 ## CI/CD Pipeline using Jenkins
 
 [Jenkinsfile](https://github.com/bostang/secure-onboarding-system/blob/main/Jenkinsfile)
+
+![flow-ci-cd-pipeline](./img/ci-cd-pipeline.png)
 
 - **Flow Continuous Integration (CI) Pipeline**:
 
