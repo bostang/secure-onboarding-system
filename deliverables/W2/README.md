@@ -207,16 +207,18 @@ spring.jpa.properties.hibernate.jdbc.batch_versioned_data=true
 sudah dilampirkan pada file `owasp-checklist.xlsx`.
 
 ## CI/CD Pipeline using Jenkins
-[Jenkinsfile](https://github.com/bostang/secure-onboarding-system/blob/main/Jenkinsfile) 
 
-Flow Continuous Integration (CI) Pipeline:
-1. Checkout frontend, backend, and verificator code from Github. 
+[Jenkinsfile](https://github.com/bostang/secure-onboarding-system/blob/main/Jenkinsfile)
+
+- **Flow Continuous Integration (CI) Pipeline**:
+
+1. Checkout frontend, backend, and verificator code from Github.
 2. Build frontend, backend, and verificator using scripts that already adjusted with the commandline.
 3. Unit test & coverage the backend code.
 4. Static Code Analysis (SAST) via SonarQube the backend code.
 
-Flow Continuous Deployment (CD) Pipeline:
+- **Flow Continuous Deployment (CD) Pipeline**:
+
 1. Build frontend, backend, and verificator code docker image and push that image to Google Container Registry (GCR).
 2. Checkout terraform configruation to deploy Google Kubernetes Engine (GKE) from GitHub.
 3. Applying terraform for GKE deployment.
-
