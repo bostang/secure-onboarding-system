@@ -7,6 +7,7 @@
 - [X] `hibernate.cfg.xml`
 - [X] `/entity/`
 - [X] github repo
+- [X] `owasp-checklist.xlsx`
 
 ## Database Schema
 
@@ -199,3 +200,7 @@ spring.jpa.properties.hibernate.jdbc.batch_versioned_data=true
 - DevOps repo (`ops-secure-onboarding-system`) : [https://github.com/qanitasyaf/ops-secure-onboarding-system](https://github.com/qanitasyaf/ops-secure-onboarding-system)
 
 ![repo-strategy](./img/repo-strategy.png)
+
+## Security Chekclist
+
+sudah dilampirkan pada file `owasp-checklist.xlsx`.
