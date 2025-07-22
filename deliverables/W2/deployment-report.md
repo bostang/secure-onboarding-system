@@ -331,3 +331,20 @@ EXPOSE 8080
 # Command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
+
+## CI/CD Pipeline using Jenkins
+
+Pada saat pengumpulan Task Week 2 (Selasa, 22 Juli 2025), kelompok kami telah berhasil 
+1. Melakukan SAST menggunakan SonarQube
+Berikut adalah contoh testing backend code.
+![pipeline-berhasil](./img/pipeline-berhasil.png)
+![hasil-sast](./img/hasil-sast.png)
+
+
+2. Melakukan deployment Google Kubernetes Engine (GKE) dengan mengaplikasikan Terraform code. 
+Pada saat ini kelompok kami masih mencoba melakukan deployment frontend terlebih dahulu. Deployment GKE menggunakan Terraform sudah berhasil dilakukan.
+![gke-deployed](./img/gke-deployed.png)
+![cluster-deployed](./img/cluster-deployed.png)
+Namun, masih terdapat permasalahan pada IAM policy. Kelompok kami akan meninjau lebih lanjut penyebab permasalahan ini.
+![deployment-error](./img/deployment-error.png)
+
