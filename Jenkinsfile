@@ -72,7 +72,7 @@ pipeline {
                             sh "docker login -u _json_key --password-stdin https://${GCR_HOSTNAME} < ${GCR_KEY_FILE_PATH}"
                             sh "docker build -t ${fullImageName} -f Dockerfile ."
                             sh "docker push ${fullImageName}"
-                            echo "Docker image Frontend ${fullImageName} berhasil dibangun dan didorong ke GCR."
+                            echo "Docker image Frontend ${fullImageName} success to build and pushed to GCR."
                         }
 
                     env.TF_APP_IMAGE = fullImageName
