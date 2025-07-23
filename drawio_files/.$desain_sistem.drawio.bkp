@@ -1751,7 +1751,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="gjNcLpdjtxv-S9Qbe2Pv" name="Entity Relationship Diagram">
-    <mxGraphModel dx="800" dy="481" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="952" dy="573" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1770,7 +1770,7 @@
         <mxCell id="3BB6HG-R45QLX3yL2-cb-280" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeWidth=2;" parent="1" vertex="1">
           <mxGeometry x="70" y="210" width="1040" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="3BB6HG-R45QLX3yL2-cb-1" value="customer" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;strokeColor=default;fontSize=16;fontStyle=1" parent="1" vertex="1">
+        <mxCell id="3BB6HG-R45QLX3yL2-cb-1" value="customers" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;strokeColor=default;fontSize=16;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="365" y="310" width="640" height="690" as="geometry" />
         </mxCell>
         <mxCell id="3BB6HG-R45QLX3yL2-cb-2" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="3BB6HG-R45QLX3yL2-cb-1" vertex="1">
@@ -2514,7 +2514,7 @@
         <mxCell id="z3EYvQdS2O1hm8UigdsL-1" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;Database : &lt;font face=&quot;Courier New&quot;&gt;customer_registration&lt;/font&gt;&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="326" y="270" width="304" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="z3EYvQdS2O1hm8UigdsL-2" value="penduduk" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;strokeColor=default;fontSize=16;fontStyle=1" parent="1" vertex="1">
+        <mxCell id="z3EYvQdS2O1hm8UigdsL-2" value="ktp_dukcapil" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;strokeColor=default;fontSize=16;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="380" y="1360" width="640" height="420" as="geometry" />
         </mxCell>
         <mxCell id="z3EYvQdS2O1hm8UigdsL-3" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;strokeColor=inherit;top=0;left=0;bottom=0;right=0;collapsible=0;dropTarget=0;fillColor=none;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=16;" parent="z3EYvQdS2O1hm8UigdsL-2" vertex="1">
