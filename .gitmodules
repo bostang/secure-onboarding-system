@@ -7,3 +7,6 @@
 [submodule "frontend-secure-onboarding-system"]
 	path = frontend-secure-onboarding-system
 	url = https://github.com/alvarolt17/frontend-secure-onboarding-system
+[submodule "ops-secure-onboarding-system"]
+	path = ops-secure-onboarding-system
+	url = https://github.com/qanitasyaf/ops-secure-onboarding-system

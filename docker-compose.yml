@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
     container_name: backend
     ports:
-      - "8083:8080"
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db_main:5432/customer_registration
       SPRING_DATASOURCE_USERNAME: postgres
@@ -71,7 +71,7 @@ services:
       dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
     container_name: external_validator
     ports:
-      - "8082:8081"
+      - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db_validator:5432/dukcapil_ktp
       SPRING_DATASOURCE_USERNAME: postgres
