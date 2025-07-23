@@ -27,6 +27,50 @@ SERVER_PORT=8080
 FIREBASE_CONFIG_PATH="model-xxx.json"
 ```
 
+## Cara Melakukan push Aplikasi ke Dockerhub
+
+```bash
+# login ke docker
+docker login
+
+# build docker image
+# pada root directory (secure-onboarding-system)
+# Untuk Backend
+docker build -t bostang/secure-onboarding-system-backend:latest ./backend-secure-onboarding-system
+
+# Untuk Verifikator
+docker build -t bostang/secure-onboarding-system-verifikator:latest ./verificator-secure-onboarding-system
+
+# Untuk Frontend
+docker build -t bostang/secure-onboarding-system-frontend:latest ./frontend-secure-onboarding-system
+
+
+# lihat image yang sudah dibangun
+docker images
+
+# # tag docker image
+# docker tag secure-onboarding-system-frontend bostang/secure-onboarding-system-frontend:latest
+# docker tag secure-onboarding-system-backend bostang/secure-onboarding-system-backend:latest
+# docker tag secure-onboarding-system-verifikator bostang/secure-onboarding-system-verifikator:latest
+
+# push ke registry
+docker push bostang/secure-onboarding-system-frontend:latest
+docker push bostang/secure-onboarding-system-backend:latest
+docker push bostang/secure-onboarding-system-verifikator:latest
+```
+
+## Cara Menjalankan Aplikasi (from Docker)
+
+```bash
+# siapkan :
+    # ./docker-compose.yml,
+    # ./backend-secure-onboarding-system/sql/database_setup_DOCKER.sql, 
+    # ./verificator-secure-onboarding-system/sql/database_DOCKER.sql
+docker compose pull
+docker compose up -d
+# tunggu sampai semua container berjalan lalu akses localhost:3000
+```
+
 ## Cara Menjalankan Aplikasi (Local)
 
 ### Cara Otomatis
