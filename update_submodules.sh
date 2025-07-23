@@ -7,9 +7,10 @@
 # Contoh: "verificator-secure-onboarding-system:main"
 
 SUBMODULES=(
-    "verificator-secure-onboarding-system:main"
-    "backend-secure-onboarding-system:feature/otp"
-    "frontend-secure-onboarding-system:feature/otp"
+    "verificator-secure-onboarding-system:experiment/docker"
+    "backend-secure-onboarding-system:experiment/docker"
+    "frontend-secure-onboarding-system:experiment/docker"
+    "ops-secure-onboarding-system:master"
 )
 
 # ---
