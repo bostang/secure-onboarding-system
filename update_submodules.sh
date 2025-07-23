@@ -8,8 +8,8 @@
 
 SUBMODULES=(
     "verificator-secure-onboarding-system:experiment/docker"
-    "backend-secure-onboarding-system:experiment/docker"
-    "frontend-secure-onboarding-system:experiment/docker"
+    "backend-secure-onboarding-system:feature/docker-support"
+    "frontend-secure-onboarding-system:feature/docker-support"
     "ops-secure-onboarding-system:master"
 )
 

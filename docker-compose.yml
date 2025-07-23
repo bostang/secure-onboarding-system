@@ -45,7 +45,9 @@ services:
 
   # Layanan Backend
   backend:
-    image: bostang/secure-onboarding-system-backend:latest # Menggunakan image dari registry
+    build:
+      context: ./backend-secure-onboarding-system # Konteks build adalah direktori layanan backend
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
     container_name: backend
     ports:
       - "8083:8080"
@@ -64,7 +66,9 @@ services:
 
   # Layanan Verifikator
   verifikator:
-    image: bostang/secure-onboarding-system-verifikator:latest # Menggunakan image dari registry
+    build:
+      context: ./verificator-secure-onboarding-system # Konteks build adalah direktori layanan verifikator
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
     container_name: external_validator
     ports:
       - "8082:8081"
@@ -81,7 +85,9 @@ services:
 
   # Layanan Frontend
   frontend:
-    image: bostang/secure-onboarding-system-frontend:latest # Menggunakan image dari registry
+    build:
+      context: ./frontend-secure-onboarding-system # Konteks build adalah direktori layanan frontend
+      dockerfile: Dockerfile # Dockerfile bernama 'Dockerfile' di dalam direktori konteks
     container_name: frontend
     ports:
       - "3000:80"
