@@ -1,196 +1,390 @@
-# Deliverables Backend W3
+# Deliverables W3 (X-men)
+
 > Kelompok : 2
 
-- [X] `DockerFile`
-- [X] `deployment.yaml`
-- [X] `service.yaml`
-- [X] `hpa.yaml`
-- [X] `values.yaml`
-- [X] `grafana-dashboard.png`   
-- [X] `README.md`
-- [X] `prometheus-config.yaml`
-- [X] `link-repo.txt`
+**Daftar Deliverables**:
 
-## DockerFile
-`DockerFile` merupakan File konfigurasi Docker untuk membangun image aplikasi Spring Boot
-
-### `Dockerfile BE`
-```docker
-# Multi-stage build untuk Secure Onboarding
-# Stage 1: Build stage
-FROM maven:3.9.8-eclipse-temurin-21 AS build
-WORKDIR /app
-
-# Copy pom.xml dan download dependencies
-COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
-RUN ./mvnw dependency:go-offline
-
-# Copy source code
-COPY src ./src
-
-# Copy environment files dengan default fallback
-COPY .env* ./
-COPY src/main/resources/model-parsec-465503-p3-firebase-adminsdk-fbsvc-1e9901efad.json* ./src/main/resources/
-
-# Build aplikasi
-RUN ./mvnw clean package -DskipTests
-
-# Stage 2: Runtime stage
-FROM eclipse-temurin:21-jre
-WORKDIR /app
-
-# Copy JAR dari build stage
-COPY --from=build /app/target/*.jar app.jar
-
-# Copy .env file ke runtime (jika ada)
-COPY --from=build /app/.env* ./
-
-# Environment variables (match dengan application.properties)
-ENV DB_URL=jdbc:postgresql://postgres-db:5432/customer_registration
-ENV DB_USERNAME=postgres
-ENV DB_PASSWORD=postgres123
-ENV JWT_SECRET=aB3dF6gH9jK2mN5pQ8rS1tU4vW7xY0zA3bC6dE9fG2hJ5kL8mO1pR4sT7uV0wX3y
-ENV JWT_EXPIRATION=86400000
-ENV SERVER_PORT=8080
-ENV FIREBASE_CONFIG_PATH=model-parsec-465503-p3-firebase-adminsdk-fbsvc-1e9901efad.json
-ENV DUKCAPIL_SERVICE_URL=http://dukcapil-dummy:8081
-
-# Expose port
-EXPOSE 8080
-
-# Run aplikasi dengan nama JAR yang fixed
-CMD ["java", "-jar", "app.jar"]
- 
- ```
-
- ### `Dockerfile FE`
-
- ```docker
- # Stage 1: Build aplikasi
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Stage 2: Serve via Nginx
-FROM nginx:stable-alpine AS production
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
-
+```tree
+.
+├── Deployment & Service
+│   ├── application
+│   │   ├── backend-deployment.yaml
+│   │   ├── frontend-deployment.yaml
+│   │   ├── frontend-service.yaml
+│   │   ├── postgresql-deployment.yaml
+│   │   └── postgresql-service.yaml
+│   ├── jenkins
+│   │   ├── jenkins-master-deployment.yaml
+│   │   └── jenkins-master-service.yaml
+│   └── sonarqube
+│       ├── configmap.yaml
+│       ├── postgres-statefulset.yaml
+│       └── sonarqube-statefulset.yaml
+├── Dockerfile
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   └── Dockerfile.verify-dukcapil
+├── prometheus.yaml
+└── README.md
 ```
 
-### `Dockerfile Ops`
+## Langkah-langkah Deplyment
 
-```docker
-FROM maven:3.8.7-openjdk-17 AS builder
+### **1. Langkah-langkah Deployment**
 
-WORKDIR /app
+Ikuti langkah-langkah berikut untuk melakukan deployment komponen aplikasi Anda ke kluster Kubernetes. Pastikan Anda memiliki `kubectl` yang terkonfigurasi dan terhubung ke kluster target Anda.
 
-COPY pom.xml .
-RUN mvn dependency:go-offline
+#### **1.1. Buat Namespace**
 
-COPY src ./src
+Pertama, buat namespace yang diperlukan untuk mengatur deployment Anda:
 
-RUN mvn clean install -DskipTests
-
-FROM openjdk:17-jdk-slim
-
-
-WORKDIR /app
-
-ARG JAR_FILE=target/ops-secure-onboarding-system-0.0.1-SNAPSHOT.jar
-COPY --from=builder /app/${JAR_FILE} app.jar
-
-EXPOSE 8080
-
-# Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
- ```
-
- ### `Dockerfile Verificator`
-```docker
- # Stage 1: Build aplikasi menggunakan Maven
-# Gunakan image Maven + Java 21
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-
-# Set working directory di dalam container build stage
-WORKDIR /app
-
-# Copy pom.xml dan mvnw (Maven Wrapper) terlebih dahulu untuk memanfaatkan Docker layer caching.
-# Karena Dockerfile ini berada di dalam folder verificator-secure-onboarding-system,
-# jalur COPY sekarang relatif terhadap folder tersebut.
-COPY pom.xml ./
-COPY mvnw ./
-COPY .mvn ./.mvn
-
-# Beri izin eksekusi pada mvnw
-RUN chmod +x mvnw
-
-# Copy seluruh source code verifikator
-# Ini akan menyalin semua file dari folder src ke /app/src di dalam container.
-COPY src ./src
-
-# Build aplikasi Spring Boot
-# Perintah ini akan mengkompilasi kode dan membuat file JAR yang dapat dieksekusi.
-# -DskipTests digunakan untuk melewati pengujian selama proses build Docker.
-RUN ./mvnw clean package -DskipTests
-
-# Stage 2: Jalankan jar dengan OpenJDK
-# Gunakan image OpenJDK yang ringan untuk menjalankan aplikasi.
-FROM eclipse-temurin:21-jdk-alpine 
-    # Menggunakan alpine untuk ukuran image yang lebih kecil
-
-# Set working directory di dalam container runtime stage
-WORKDIR /app
-
-# Copy hasil build (file JAR) dari stage 'build' ke direktori /app di stage ini.
-# File JAR yang dihasilkan akan memiliki nama seperti 'verificator-secure-onboarding-system-0.0.1-SNAPSHOT.jar'
-# atau nama lain sesuai konfigurasi di pom.xml Anda.
-# Kita menyalinnya sebagai 'app.jar' untuk konsistensi.
-COPY --from=build /app/target/*.jar app.jar
-
-# --- Opsional: Tambahkan baris ini untuk debugging (misalnya, untuk netcat) ---
-# eclipse-temurin:21-jdk-alpine adalah berbasis Alpine, jadi gunakan apk
-# RUN apk update && apk add netcat-traditional && rm -rf /var/cache/apk/*
-# Baris di atas akan menginstal netcat untuk debugging jika diperlukan.
-# 'rm -rf /var/cache/apk/*' membersihkan cache apk untuk menjaga ukuran image tetap kecil.
-# ----------------------------------------------------------------------
-
-# Tentukan perintah yang akan dijalankan saat container dimulai.
-# Ini akan menjalankan aplikasi Spring Boot Anda.
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+```bash
+kubectl create namespace jenkins
+kubectl create namespace sonarqube
+kubectl create namespace backend
+kubectl create namespace frontend
 ```
 
- ## deployment.yaml
-`deployment.yaml` berisikan File konfigurasi untuk mendefinisikan Deployment di Kubernetes/OpenShift.
->tungguin fiqa
+#### **1.2. Deployment PostgreSQL untuk SonarQube**
 
-## service.yaml
-`service.yaml` berisikan Konfigurasi Service (ClusterIP/NodePort/LoadBalancer) untuk akses aplikasi
->tungguin fiqa
+Database PostgreSQL untuk SonarQube memerlukan secret untuk kredensial database dan configmap untuk konfigurasi.
 
-## hpa.yaml
-`hpa.yaml` berisikan Konfigurasi Horizontal Pod Autoscaler (HPA) berbasis resource (misalnya CPU)
->tungguin fiqa
+1. **Buat Secret Database SonarQube:**
+    Buat secret bernama `sonarqube-db-secret` di namespace `sonarqube`. Ganti `your_db_name`, `your_username`, dan `your_password` dengan nilai yang Anda inginkan.
 
-## values.yaml
-`values.yaml` berisikan File konfigurasi Helm chart (jika menggunakan Helm untuk deployment)
->tungguin fiqa
+    ```bash
+    kubectl create secret generic sonarqube-db-secret \
+      --namespace=sonarqube \
+      --from-literal=database=your_db_name \
+      --from-literal=username=your_username \
+      --from-literal=password=your_password
+    ```
 
-## grafana-dashboard.png
-`grafana-dashboard.png` berisikan Screenshot dashboard performa aplikasi dari Grafana
->tungguin fiqa
+2. **Buat ConfigMap PostgreSQL untuk SonarQube:**
+    Buat ConfigMap bernama `postgres-config` di namespace `sonarqube`, berisi konfigurasi PostgreSQL (misalnya, `postgresql.conf`).
 
-## prometheus-config.yaml
-`prometheus-config.yaml` berisikan File konfigurasi Prometheus jika dilakukan kustomisasi 
->tungguin fiqa
+    ```bash
+    # Contoh isi postgresql.conf (simpan ini ke file, misal, postgresql.conf)
+    # max_connections = 100
+    # shared_buffers = 256MB
+    # ...
 
-## link-repo.txt
-`link-repo.txt` berisikan File berisi tautan ke GitHub/GitLab repo utama
->tungguin fiqa
+    kubectl create configmap postgres-config \
+      --namespace=sonarqube \
+      --from-file=postgresql.conf=<path/to/your/postgresql.conf>
+    ```
+
+3. **Deployment PostgreSQL StatefulSet dan Service untuk SonarQube:**
+    Terapkan `postgres-statefulset.yaml` yang mencakup StatefulSet untuk database PostgreSQL dan Service ClusterIP terkait untuk SonarQube.
+
+    ```bash
+    kubectl apply -f postgres-statefulset.yaml
+    ```
+
+#### **1.3. Deployment SonarQube**
+
+SonarQube memerlukan ConfigMap untuk file `sonar.properties` miliknya.
+
+1. **Buat ConfigMap SonarQube:**
+    Buat ConfigMap bernama `sonarqube-config` di namespace `sonarqube`, berisi konfigurasi `sonar.properties` SonarQube.
+
+    ```bash
+    # Contoh isi sonar.properties (simpan ini ke file, misal, sonar.properties)
+    # sonar.jdbc.url=jdbc:postgresql://postgresql:5432/sonarqube
+    # sonar.jdbc.username=sonarqube
+    # sonar.jdbc.password=sonarqube
+    # ...
+
+    kubectl create configmap sonarqube-config \
+      --namespace=sonarqube \
+      --from-file=sonar.properties=<path/to/your/sonar.properties>
+    ```
+
+2. **Deployment SonarQube StatefulSet dan Service:**
+    Terapkan `sonarqube-statefulset.yaml` yang mencakup StatefulSet untuk SonarQube dan Service ClusterIP terkait.
+
+    ```bash
+    kubectl apply -f sonarqube-statefulset.yaml
+    ```
+
+#### **1.4. Deployment PostgreSQL untuk Backend**
+
+Database PostgreSQL untuk backend juga memerlukan secret untuk kredensial.
+
+1. **Buat Secret Database Backend:**
+    Buat secret bernama `postgres-credentials` di namespace `backend`. Ganti `your_backend_db_name`, `your_backend_username`, dan `your_backend_password` dengan nilai yang Anda inginkan.
+
+    ```bash
+    kubectl create secret generic postgres-credentials \
+      --namespace=backend \
+      --from-literal=database=your_backend_db_name \
+      --from-literal=username=your_backend_username \
+      --from-literal=password=your_backend_password
+    ```
+
+2. **Deployment PostgreSQL StatefulSet untuk Backend:**
+    Terapkan `postgresql-deployment.yaml` yang mendefinisikan StatefulSet untuk PostgreSQL backend.
+
+    ```bash
+    kubectl apply -f postgresql-deployment.yaml
+    ```
+
+3. **Deployment PostgreSQL Service untuk Backend:**
+    Terapkan `postgresql-service.yaml` yang mendefinisikan Service ClusterIP untuk PostgreSQL backend.
+
+    ```bash
+    kubectl apply -f postgresql-service.yaml
+    ```
+
+#### **1.5. Deployment Aplikasi Backend**
+
+Aplikasi backend memerlukan deployment dan service.
+
+1. **Deployment Backend Deployment dan Service:**
+    Terapkan `backend-deployment.yaml` yang mencakup Deployment untuk aplikasi backend dan Service LoadBalancer terkait.
+
+    ```bash
+    kubectl apply -f backend-deployment.yaml
+    ```
+
+#### **1.6. Deployment Aplikasi Frontend**
+
+Aplikasi frontend memerlukan deployment dan service.
+
+1. **Deployment Frontend Deployment:**
+    Terapkan `frontend-deployment.yaml` yang mendefinisikan Deployment untuk aplikasi frontend.
+
+    ```bash
+    kubectl apply -f frontend-deployment.yaml
+    ```
+
+2. **Deployment Frontend Service:**
+    Terapkan `frontend-service.yaml` yang mendefinisikan Service LoadBalancer untuk aplikasi frontend.
+
+    ```bash
+    kubectl apply -f frontend-service.yaml
+    ```
+
+#### **1.7. Deployment Jenkins**
+
+Jenkins memerlukan PersistentVolumeClaim, Service Account, Deployment, dan Service.
+
+1. **Buat PersistentVolumeClaim (PVC) Jenkins:**
+    Anda perlu mendefinisikan PVC untuk Jenkins. Buat file bernama `jenkins-pvc.yaml` (contoh di bawah) dan terapkan.
+
+    ```yaml
+    # jenkins-pvc.yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: jenkins-pv-claim
+      namespace: jenkins
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi # Sesuaikan penyimpanan sesuai kebutuhan
+    ```
+
+    ```bash
+    kubectl apply -f jenkins-pvc.yaml
+    ```
+
+2. **Buat Service Account Jenkins:**
+    Buat service account untuk Jenkins. Anda mungkin perlu mendefinisikan role dan role binding untuknya nanti, tergantung pada interaksi Jenkins dengan API Kubernetes.
+
+    ```yaml
+    # jenkins-sa.yaml
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: jenkins-sa
+      namespace: jenkins
+    ```
+
+    ```bash
+    kubectl apply -f jenkins-sa.yaml
+    ```
+
+3. **Deployment Jenkins Master Deployment:**
+    Terapkan `jenkins-master-deployment.yaml` yang mendefinisikan Deployment untuk master Jenkins.
+
+    ```bash
+    kubectl apply -f jenkins-master-deployment.yaml
+    ```
+
+4. **Deployment Jenkins Master Service:**
+    Terapkan `jenkins-master-service.yaml` yang mendefinisikan Service LoadBalancer untuk master Jenkins.
+
+    ```bash
+    kubectl apply -f jenkins-master-service.yaml
+    ```
+
+-----
+
+### **2. Konfigurasi**
+
+Bagian ini merinci konfigurasi spesifik untuk setiap komponen yang di-deploy.
+
+#### **2.1. PostgreSQL untuk SonarQube**
+
+- **Kredensial Database:** Dikonfigurasi melalui `sonarqube-db-secret` (nama database, username, password).
+- **Konfigurasi PostgreSQL:** Dikonfigurasi melalui `postgres-config` (misalnya, `max_connections`, `shared_buffers`).
+- **Persistensi Data:** Data dipertahankan menggunakan PersistentVolumeClaim bernama `postgres-data` dengan permintaan penyimpanan 2Gi.
+
+#### **2.2. SonarQube**
+
+- **Koneksi Database:** SonarQube terhubung ke database PostgreSQL menggunakan variabel lingkungan `SONAR_JDBC_URL`, `SONAR_JDBC_USERNAME`, dan `SONAR_JDBC_PASSWORD`, yang mengambil nilai dari `sonarqube-db-secret`.
+- **Konfigurasi Aplikasi:** Pengaturan umum SonarQube dikelola melalui ConfigMap `sonarqube-config` yang memetakan ke `sonar.properties`.
+- **Persistensi Data:** Data, log, dan ekstensi SonarQube dipertahankan menggunakan PersistentVolumeClaims bernama `sonarqube-data` (2Gi), `sonarqube-logs` (1Gi), dan `sonarqube-extensions` (1Gi) secara berturut-turut.
+- **Sumber Daya:** Meminta 4Gi memori dan 1 CPU, batas 6Gi memori dan 2 CPU.
+
+#### **2.3. PostgreSQL untuk Backend**
+
+- **Kredensial Database:** Dikonfigurasi melalui secret `postgres-credentials` (nama database, username, password).
+- **Persistensi Data:** Data dipertahankan menggunakan PersistentVolumeClaim bernama `postgres-data` dengan permintaan penyimpanan 5Gi.
+- **Sumber Daya:** Meminta 2Gi memori dan 500m CPU, batas 4Gi memori dan 1.5 CPU.
+
+#### **2.4. Aplikasi Backend**
+
+- **Host Database:** Variabel lingkungan `DB_HOST` diatur ke `postgresql-service.backend` untuk terhubung ke layanan PostgreSQL backend di namespace `backend`.
+- **Kredensial Database:** `DB_USERNAME` dan `DB_PASSWORD` diambil dari secret `postgres-credentials`.
+- **Port:** Aplikasi mendengarkan di port 8080.
+- **Sumber Daya:** Meminta 512Mi memori dan 250m CPU, batas 1Gi memori dan 1 CPU.
+
+#### **2.5. Aplikasi Frontend**
+
+- **Port:** Aplikasi mendengarkan di port 8080.
+- **Sumber Daya:** Meminta 64Mi memori dan 50m CPU, batas 128Mi memori dan 100m CPU.
+
+#### **2.6. Jenkins**
+
+- **Kredensial Admin:** ID admin awal adalah `admin` dan kata sandi adalah `supersecurepassword` yang diatur melalui variabel lingkungan `JENKINS_ADMIN_ID` dan `JENKINS_ADMIN_PASSWORD`. **Catatan: Sangat disarankan untuk segera mengubah kata sandi ini setelah login pertama dan menggunakan manajemen secret yang tepat.**
+- **Opsi Java:** Dikonfigurasi melalui `JAVA_OPTS` untuk mengatur memori JVM (`-Xmx2048m -Xms512m`).
+- **Persistensi Data:** Direktori home Jenkins (`/var/jenkins_home`) dipasang ke PersistentVolumeClaim bernama `jenkins-pv-claim`.
+- **Sumber Daya:** Meminta 3Gi memori dan 1000m CPU, batas 4Gi memori dan 1500m CPU.
+- **Service Account:** Menggunakan `jenkins-sa` untuk interaksi API Kubernetes.
+
+#### **2.7. Prometheus (File Konfigurasi)**
+
+- `prometheus.yaml` yang disediakan adalah file konfigurasi untuk Prometheus, bukan sumber daya Kubernetes. Ini mendefinisikan `scrape_config` untuk job bernama `registration-customer-spring-boot-app` untuk mengambil metrik dari `host.docker.internal:8080` pada endpoint `/api/actuator/prometheus` setiap 15 detik. Konfigurasi ini akan digunakan saat menyiapkan instans Prometheus *di luar* Kubernetes atau dalam deployment Prometheus yang mengonsumsi konfigurasi ini. Jika Prometheus di-deploy di dalam Kubernetes, `targets` biasanya akan menjadi konfigurasi penemuan layanan Kubernetes.
+
+-----
+
+### **3. Hasil Verifikasi**
+
+Setelah deployment, verifikasi status sumber daya Kubernetes Anda.
+
+#### **3.1. Periksa Status Namespace**
+
+```bash
+kubectl get namespaces
+```
+
+Output yang diharapkan harus menunjukkan namespace `jenkins`, `sonarqube`, `backend`, dan `frontend` dalam status `Active`.
+
+#### **3.2. Periksa Status Pod**
+
+```bash
+kubectl get pods -n jenkins
+kubectl get pods -n sonarqube
+kubectl get pods -n backend
+kubectl get pods -n frontend
+```
+
+Output yang diharapkan: Semua pod harus dalam status `Running` atau `Completed`, dan kolom `READY` mereka harus menunjukkan semua kontainer sudah siap (misalnya, `1/1`).
+
+#### **3.3. Periksa Status Service**
+
+```bash
+kubectl get services -n jenkins
+kubectl get services -n sonarqube
+kubectl get services -n backend
+kubectl get services -n frontend
+```
+
+Output yang diharapkan:
+
+- `jenkins-service`, `backend-service`, dan `frontend-service` harus memiliki `EXTERNAL-IP` eksternal jika kluster Kubernetes Anda mendukung layanan LoadBalancer dan penyedia cloud dikonfigurasi.
+- `postgresql` (di namespace `sonarqube`), `postgresql-service` (di namespace `backend`), dan `sonarqube` harus memiliki `ClusterIP`.
+
+#### **3.4. Periksa Status Deployment/StatefulSet**
+
+```bash
+kubectl get deployments -n backend
+kubectl get deployments -n frontend
+kubectl get deployments -n jenkins
+kubectl get statefulsets -n sonarqube
+kubectl get statefulsets -n backend
+```
+
+Output yang diharapkan: Semua deployment dan statefulset harus menunjukkan replika `READY` yang cocok dengan replika `DESIRED` (misalnya, `1/1`).
+
+#### **3.5. Mengakses Aplikasi**
+
+- **Jenkins:** Akses Jenkins menggunakan `EXTERNAL-IP` dari `jenkins-service` di port 8080 (misalnya, `http://<jenkins-service-external-ip>:8080`).
+- **SonarQube:** Akses SonarQube menggunakan `EXTERNAL-IP` dari layanan LoadBalancer jika Anda mengeksposnya (tidak langsung dalam `sonarqube-statefulset.yaml` yang disediakan, yang hanya membuat layanan ClusterIP). Jika Anda ingin akses eksternal, Anda perlu membuat Ingress atau layanan LoadBalancer untuk SonarQube. Untuk akses internal, Anda dapat menggunakan `http://sonarqube.sonarqube:9000`.
+- **Backend:** Akses aplikasi backend menggunakan `EXTERNAL-IP` dari `backend-service` di port 8080 (misalnya, `http://<backend-service-external-ip>:8080`).
+- **Frontend:** Akses aplikasi frontend menggunakan `EXTERNAL-IP` dari `frontend-service` di port 8080 (misalnya, `http://<frontend-service-external-ip>:8080`).
+
+#### **3.6. Periksa Log untuk Kesalahan**
+
+```bash
+kubectl logs <nama-pod> -n <nama-namespace>
+```
+
+Periksa log untuk pesan `Error` atau `Failed` untuk semua pod.
+
+-----
+
+### **4. Kendala (Issues) dan Troubleshooting**
+
+Bagian ini menguraikan masalah umum dan langkah-langkah pemecahannya.
+
+#### **4.1. Pod Tetap dalam Status Pending**
+
+- **Penyebab:** Sumber daya yang tidak mencukupi (CPU, memori) di kluster, atau tidak ada node yang tersedia dengan pemilih node/toleransi yang cocok. Selain itu, PersistentVolumeClaims (PVC) mungkin tidak terikat jika tidak ada PersistentVolume (PV) yang cocok yang tersedia atau disediakan oleh StorageClass.
+- **Troubleshooting:**
+  - Periksa events: `kubectl describe pod <nama-pod> -n <nama-namespace>` untuk melihat mengapa pod tertunda.
+  - Periksa sumber daya kluster: `kubectl top nodes` untuk melihat CPU/memori yang tersedia.
+  - Periksa status PVC: `kubectl get pvc -n <nama-namespace>`. Jika PVC berstatus `Pending`, pastikan Anda memiliki StorageClass yang terkonfigurasi atau buat PV secara manual.
+  - Tingkatkan ukuran kluster atau sesuaikan permintaan/batas sumber daya di file YAML Anda.
+
+#### **4.2. Pod dalam CrashLoopBackOff**
+
+- **Penyebab:** Kesalahan aplikasi, konfigurasi yang salah, variabel lingkungan yang hilang, atau masalah koneksi ke dependensi (misalnya, database).
+- **Troubleshooting:**
+  - Periksa log: `kubectl logs <nama-pod> -n <nama-namespace>` untuk mengidentifikasi kesalahan spesifik.
+  - Verifikasi ConfigMaps dan Secrets: Pastikan keduanya ada dan berisi nilai yang benar.
+  - Periksa konektivitas ke dependensi:
+    - Untuk backend, pastikan `postgresql-service` berjalan dan dapat diakses dari pod backend.
+    - Untuk SonarQube, pastikan layanan `postgresql` berjalan di namespace `sonarqube` dan dapat diakses.
+  - Periksa pull gambar: Pastikan gambar Docker ada dan dapat diakses. `kubectl describe pod <nama-pod> -n <nama-namespace>` mungkin menunjukkan `ImagePullBackOff` jika ada masalah saat menarik gambar.
+
+#### **4.3. Service Tidak Mendapatkan IP Eksternal (Tipe LoadBalancer)**
+
+- **Penyebab:** Lingkungan kluster Kubernetes Anda mungkin tidak mendukung layanan tipe `LoadBalancer` (misalnya, kluster on-premises tanpa integrasi penyedia cloud) atau ada masalah dengan pengontrol LoadBalancer penyedia cloud.
+- **Troubleshooting:**
+  - Periksa dokumentasi kluster untuk dukungan LoadBalancer.
+  - Pertimbangkan untuk menggunakan tipe layanan `NodePort` dan mengakses melalui IP node dan port, atau menyiapkan pengontrol Ingress (misalnya, Nginx Ingress Controller) untuk akses eksternal.
+  - Verifikasi kuota layanan LoadBalancer penyedia cloud atau batas sumber daya.
+
+#### **4.4. Aplikasi Tidak Dapat Terhubung ke Database**
+
+- **Penyebab:** Kredensial database yang salah, host/port database yang salah, kebijakan jaringan yang mencegah komunikasi, atau database belum sepenuhnya siap.
+- **Troubleshooting:**
+  - Verifikasi `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD` di deployment aplikasi (misalnya, `backend-deployment.yaml`) dan pastikan secret `postgres-credentials` dibuat dengan benar.
+  - Verifikasi `SONAR_JDBC_URL`, `SONAR_JDBC_USERNAME`, `SONAR_JDBC_PASSWORD` untuk SonarQube dan `sonarqube-db-secret`.
+  - Pastikan layanan database (misalnya, `postgresql-service.backend` atau `postgresql.sonarqube`) `Running` dan dapat diakses.
+  - Dari dalam pod aplikasi, coba ping layanan database: `kubectl exec -it <nama-pod-aplikasi> -n <nama-namespace> -- ping <nama-layanan-db>`.
+  - Periksa log pod database untuk kesalahan.
+
+#### **4.5. Persistent Volumes Tidak Disediakan**
+
+- **Penyebab:** Tidak ada StorageClass yang didefinisikan, atau StorageClass default tidak berfungsi dengan lingkungan Anda, atau tidak ada PersistentVolume yang tersedia untuk memenuhi permintaan PVC.
+- **Troubleshooting:**
+  - Periksa StorageClass: `kubectl get storageclass`.
+  - Periksa status PVC: `kubectl get pvc -n <nama-namespace>`. Jika statusnya `Pending`, jelaskan untuk melihat alasannya.
+  - Jika Anda menggunakan penyedia cloud, pastikan penyedia cloud tersebut dikonfigurasi dengan benar untuk menyediakan volume persisten.
+  - Untuk kluster on-premises, pertimbangkan untuk menggunakan penyedia volume lokal atau solusi penyimpanan eksternal seperti Rook, Longhorn, atau NFS.
