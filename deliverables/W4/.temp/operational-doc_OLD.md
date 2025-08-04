@@ -131,78 +131,42 @@ Manifest Kubernetes (`.yaml` files) diterapkan untuk membuat *deployment*, *serv
 
 ## 2. Deployment Otomatis dengan CI/CD
 
-Pipeline CI/CD diimplementasikan menggunakan Jenkins untuk mengotomatisasi seluruh alur kerja, dari *checkout* kode hingga *deployment* di lingkungan produksi. Berbeda dari pendekatan monolitik, pipeline ini dipisahkan menjadi dua *job* yang independen untuk *frontend* dan *backend*.
+Pipeline CI/CD diimplementasikan menggunakan Jenkins untuk mengotomatisasi seluruh alur kerja, dari *checkout* kode hingga *deployment* di lingkungan produksi.
 
-### 2.1 Pipeline Frontend
+### Visualisasi Pipeline
 
-![pipeline-frontend](./assets/pipeline-frontend.png)
+Berikut adalah gambaran umum dari alur kerja CI/CD menggunakan Jenkins Declarative Pipeline:
 
-Pipeline ini fokus pada proses *build*, *test*, dan *deployment* aplikasi *frontend*.
+![ci-cd-pipeline](./assets/ci-cd-pipeline.png)
 
-**Tahapan dalam Pipeline:**
+### Tahapan dalam Pipeline
 
-1. **Checkout**: Mengambil kode sumber dari repositori `frontend-secure-onboarding-system`.
-2. **Code Linting**: Menjalankan `npm install` dan `npm run lint` untuk memeriksa kualitas kode.
-3. **Docker Build & Push**:
-    * Mengambil kunci rahasia (`VITE_FIREBASE_API_KEY`) dari Google Cloud Secret Manager.
-    * Membangun *image* Docker dengan *environment variable* yang dimasukkan melalui `--build-arg`.
-    * Memberi tag *image* dengan nomor *build* Jenkins (`${env.BUILD_NUMBER}`).
-    * Mendorong *image* ke Google Container Registry (GCR).
-4. **Deploy to GKE**:
-    * Mengganti *image tag* di file `k8s/deployment.yaml` dengan nomor *build* saat ini.
-    * Mengkonfigurasi `kubectl` untuk terhubung ke *cluster* GKE.
-    * Menerapkan konfigurasi `deployment.yaml` ke *cluster*.
+1. **Source Code Checkout**: Mengambil kode sumber dari repositori *backend*, *frontend*, dan konfigurasi ops. Tahap ini diparalelkan untuk efisiensi.
+2. **Inject Secrets**: Menginjeksikan kunci rahasia (seperti Firebase Private Key) dari Jenkins Credentials ke direktori proyek.
+3. **Build Application**: Membangun aplikasi *backend* (Maven) dan *frontend* (Node.js) secara paralel.
+4. **Testing & Quality Analysis**: Menjalankan pengujian unit, analisis kualitas kode, dan pemindaian keamanan (misalnya dengan SonarQube atau OWASP ZAP) secara paralel.
+5. **Package Application**: Mengemas aplikasi yang sudah teruji.
+6. **Docker Build & Registry**: Membangun *image* Docker untuk *backend* dan *frontend*, lalu mendorongnya ke Google Container Registry (GCR) secara paralel.
+7. **Staging Deployment**: Menerapkan *image* Docker ke lingkungan *staging* untuk pengujian integrasi.
+8. **Staging Tests**: Menjalankan tes integrasi otomatis di lingkungan *staging*.
+9. **QA Approval**: Membutuhkan persetujuan manual dari tim QA sebelum melanjutkan ke produksi.
+10. **Production Deployment**: Menerapkan manifest Kubernetes (`.yaml`) ke *cluster* GKE produksi.
+11. **Production Verification**: Melakukan verifikasi pasca-deployment untuk memastikan layanan berjalan dengan baik.
+12. **Post-Deployment Report**: Menghasilkan laporan akhir dari proses deployment.
 
-**Environment Variables Kunci:**
-
-* `VITE_BACKEND_BASE_URL`: URL *backend* yang diakses oleh *frontend*.
-* `VITE_VERIFICATOR_BASE_URL`: URL layanan verifikator.
-* `VITE_FIREBASE_*`: Variabel konfigurasi untuk layanan Firebase Auth.
-
-### 2.2 Pipeline Backend
-
-![pipeline-backend](./assets/pipeline-backend.png   )
-
-Pipeline ini fokus pada proses *build*, *test*, dan *deployment* aplikasi *backend*.
-
-**Tahapan dalam Pipeline:**
-
-1. **Checkout**: Mengambil kode sumber dari repositori `backend-secure-onboarding-system`.
-2. **Unit Test**: Menjalankan `mvn package` untuk mengeksekusi semua *unit test* dan menghasilkan laporan. Laporan ini kemudian diarsipkan dengan `junit 'target/surefire-reports/*.xml'`.
-3. **Sonarqube Test**:
-    * Mengambil token SonarQube dari Google Cloud Secret Manager.
-    * Menjalankan analisis kode dengan Maven (`mvn clean verify sonar:sonar`).
-4. **Docker Build & Push**:
-    * Mengambil kredensial Firebase Service Account (`firebase-otp-cred`) dari Google Cloud Secret Manager dan menyimpannya sebagai file.
-    * Memindahkan file kredensial ke direktori sumber (`src/main/resources`).
-    * Membangun *image* Docker dengan *build-arg* untuk kredensial tersebut.
-    * Mendorong *image* ke Google Container Registry (GCR) dengan tag nomor *build* saat ini.
-5. **Deploy to GKE**:
-    * Mengganti *image tag* di file `k8s/deployment.yaml` dengan nomor *build* saat ini.
-    * Mengkonfigurasi `kubectl` untuk terhubung ke *cluster* GKE.
-    * Menerapkan konfigurasi `deployment.yaml` ke *cluster*.
-
-**Environment Variables Kunci:**
-
-* `SONAR_PROJECT_KEY`: Kunci proyek untuk SonarQube.
-* `SONAR_URL`: URL server SonarQube.
-* `IMAGE_TAG`: Nomor *build* Jenkins yang digunakan sebagai tag *image*.
-
-### 2.3 Konfigurasi Jenkins
+### Konfigurasi Jenkins
 
 * **Lingkungan Jenkins**: Menggunakan Docker-in-Docker (*dind*) untuk menjalankan Jenkins di dalam container, yang memiliki akses ke Docker socket *host*.
-* **Tools**: Menggunakan plugin penting seperti Maven, JDK, dan NodeJS.
-* **Secrets Management**: Mengelola kredensial sensitif (GCR Service Account Key, Firebase Private Key, SonarQube Token) menggunakan **Google Cloud Secret Manager** dan diakses langsung dari dalam pipeline.
+* **Plugins**: Menggunakan plugin penting seperti Git, Docker Pipeline, NodeJS, dan JDK Tool.
+* **Secrets Management**: Mengelola kredensial sensitif (GCR Service Account Key, Firebase Private Key) menggunakan fitur **Jenkins Credentials** sebagai *secret file* atau *secret text*.
 
----
-
-## 3. Troubleshooting Umum
+### Troubleshooting Umum
 
 * **Ruang Disk Penuh**: Jika proses *build* Jenkins terhenti, periksa penggunaan disk VM. Solusinya adalah meningkatkan ukuran disk VM di Google Cloud.
 * **Izin Akses**: Jika terjadi *permission denied*, pastikan user Jenkins memiliki izin yang memadai (misalnya, dengan menggunakan `chmod`) pada direktori yang relevan.
 * **IP Dinamis**: Pastikan alamat IP eksternal VM Jenkins diubah menjadi statis untuk menghindari masalah konektivitas.
 
-## 4. Catatan
+## Catatan
 
 * **Urutan Ingress**: Dalam konfigurasi *ingress*, urutan *path* sangat penting. *Path* yang paling spesifik, seperti `/api/auth`, harus diletakkan di atas *path* yang lebih umum, seperti `/`, untuk memastikan *routing* berjalan dengan benar.
 * **Build History**: Dokumentasikan setiap riwayat *build* di Jenkins (sukses atau gagal) dengan deskripsi yang jelas untuk mempermudah proses *debugging* dan audit.
