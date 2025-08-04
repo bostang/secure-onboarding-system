@@ -7,8 +7,8 @@ Berikut adalah daftar file yang harus dikumpulkan dan statusnya:
 - [X] `jmeter-test-plan.jmx` / `script.js`
 - [X] `performance-report.pdf` / `.md`
 - [ ] `owasp-zap-report.html` / `.pdf`
-- [ ] `deployment-report.md`
-- [ ] `operational-doc.md`
+- [] `deployment-report.md`
+- [X] `operational-doc.md`
 - [ ] `grafana-dashboard.png` (opsional)
 - [ ] `final-demo.mp4` (opsional)
 - [X] `README.md`
