@@ -108,11 +108,11 @@ Berikut adalah daftar file yang harus dikumpulkan dan statusnya:
 
 - [X] `jmeter-test-plan.jmx` / `script.js`
 - [X] `performance-report.pdf` / `.md`
-- [ ] `owasp-zap-report.html` / `.pdf`
+- [X] `owasp-zap-report.html` / `.pdf`
 - [X] `deployment-report.md`
 - [X] `operational-doc.md`
-- [ ] `grafana-dashboard.png` (opsional)
-- [ ] `final-demo.mp4` (opsional)
+- [X] `grafana-dashboard.png` (opsional)
+- [X] `final-demo.mp4` (opsional)
 - [X] `README.md`
 
 ---
@@ -198,6 +198,7 @@ Secara keseluruhan, proyek ini menunjukkan pemahaman yang kuat tentang praktik D
 ## Tautan Penting
 
 - **Aplikasi Wondr Desktop:** [https://wondrdesktop.my.id/](https://wondrdesktop.my.id/)
+- **Repository Parent:** [https://github.com/bostang/secure-onboarding-system](https://github.com/bostang/secure-onboarding-system)
 - **Repository Backend:** [https://github.com/bostang/backend-secure-onboarding-system](https://github.com/bostang/backend-secure-onboarding-system)
 - **Repository Frontend:** [https://github.com/alvarolt17/frontend-secure-onboarding-system](https://github.com/alvarolt17/frontend-secure-onboarding-system)
 - **Repository Ops:** [https://github.com/qanitasyaf/ops-secure-onboarding-system](https://github.com/qanitasyaf/ops-secure-onboarding-system/)
