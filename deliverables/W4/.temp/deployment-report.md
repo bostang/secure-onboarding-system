@@ -1,332 +1,176 @@
-# Laporan Dokumentasi Deployment
+# Dokumen Operasional Deployment
 
-Dokumen ini menjelaskan arsitektur dan konfigurasi *deployment* aplikasi "Wondr Desktop" ke lingkungan produksi, yang menggunakan Google Kubernetes Engine (GKE) dan layanan Google Cloud lainnya.
+Dokumen ini merangkum proses *deployment* aplikasi ke lingkungan *cluster* Google Kubernetes Engine (GKE), baik melalui metode manual maupun otomatis dengan CI/CD.
 
-## 1. Arsitektur Aplikasi
+## 1. Deployment Manual
 
-Aplikasi "Wondr Desktop" terdiri dari empat komponen utama yang terpisah dalam direktori *root* proyek:
+*Deployment* manual dilakukan untuk kebutuhan *testing* atau *deployment* awal. Proses ini melibatkan serangkaian perintah baris yang dieksekusi secara berurutan.
 
-* **backend-secure-onboarding-system**: Layanan *backend* utama.
-* **frontend-secure-onboarding-system**: Aplikasi *frontend* berbasis web.
-* **ops-secure-onboarding-system**: Direktori untuk konfigurasi operasional.
-* **verificator-secure-onboarding-system**: Layanan verifikasi pihak ketiga.
-
-```tree
-.
-├── backend-secure-onboarding-system
-├── frontend-secure-onboarding-system
-├── ops-secure-onboarding-system
-└── verificator-secure-onboarding-system
-````
-
-### 1.1 Struktur Backend & Frontend
-
-Struktur folder **backend** menunjukkan arsitektur Spring Boot dengan fokus pada layanan otentikasi, registrasi, dan verifikasi.
-
-```tree
-.
-├── Dockerfile
-├── alert-rules.yml
-├── alertmanager.yml
-├── mvnw
-├── pom.xml
-├── prometheus.yml
-src
- ├── main
- │   ├── java
- │   │   └── com
- │   │       └── reg
- │   │           └── regis
- │   │               ├── RegistrationAbsoluteApplication.java
- │   │               ├── client
- │   │               │   └── DukcapilWebClient.java
- │   │               ├── config
- │   │               │   ├── DukcapilClientConfig.java
- │   │               │   ├── OtpConfig.java
- │   │               │   ├── RateLimitConfig.java
- │   │               │   ├── SecurityConfig.java
- │   │               │   ├── SwaggerConfig.java
- │   │               │   └── WebConfig.java
- │   │               ├── controller
- │   │               │   ├── LoginController.java
- │   │               │   ├── OtpController.java
- │   │               │   ├── RegistrationController.java
- │   │               │   └── VerificationController.java
- │   │               ├── dto
- │   │               │   ├── request
- │   │               │   │   ├── DukcapilRequestDto.java
- │   │               │   │   ├── EmailVerificationRequest.java
- │   │               │   │   ├── NikVerificationRequest.java
- │   │               │   │   ├── PhoneVerificationRequest.java
- │   │               │   │   └── RegistrationRequest.java
- │   │               │   └── response
- │   │               │       ├── DukcapilResponseDto.java
- │   │               │       ├── RegistrationResponse.java
- │   │               │       └── VerificationResponse.java
- │   │               ├── model
- │   │               │   ├── Alamat.java
- │   │               │   ├── Customer.java
- │   │               │   └── Wali.java
- │   │               ├── repository
- │   │               │   └── CustomerRepository.java
- │   │               ├── security
- │   │               │   ├── JwtAuthFilter.java
- │   │               │   ├── JwtUtil.java
- │   │               │   └── SecurityUtil.java
- │   │               └── service
- │   │                   ├── CustomerUserDetailsService.java
- │   │                   ├── DukcapilClientService.java
- │   │                   ├── LoginAttemptService.java
- │   │                   ├── RegistrationService.java
- │   │                   └── VerificationService.java
- │   └── resources
- │       └── application.properties
- └── test
-     ├── java
-     │   └── com
-     │       └── reg
-     │           └── regis
-     │               ├── TestSummary.md
-     │               ├── controller
-     │               │   ├── LoginControllerTest.java
-     │               │   ├── RegistrationControllerTest.java
-     │               │   └── VerificationControllerTest.java
-     │               ├── dto
-     │               │   ├── request
-     │               │   │   ├── DukcapilRequestDtoTest.java
-     │               │   │   ├── EmailVerificationRequestTest.java
-     │               │   │   ├── NikVerificationRequestTest.java
-     │               │   │   ├── PhoneVerificationRequestTest.java
-     │               │   │   └── RegistrationRequestTest.java
-     │               │   └── response
-     │               │       ├── DukcapilResponseDtoTest.java
-     │               │       ├── RegistrationResponseTest.java
-     │               │       └── VerificationResponseTest.java
-     │               ├── model
-     │               │   ├── AlamatTest.java
-     │               │   ├── CustomerTest.java
-     │               │   └── WaliTest.java
-     │               ├── repository
-     │               │   └── CustomerRepositoryTest.java
-     │               ├── security
-     │               │   ├── JwtAuthFilterTest.java
-     │               │   ├── JwtUtilTest.java
-     │               │   └── SecurityUtilTest.java
-     │               └── service
-     │                   ├── CustomerUserDetailsServiceTest.java
-     │                   ├── DukcapilClientServiceTest.java
-     │                   ├── LoginAttemptServiceTest.java
-     │                   ├── RegistrationServiceTest.java
-     │                   └── VerificationServiceTest.java
-     └── resources
-         └── application-test.properties
+### Langkah-langkah Deployment
+Sebelum melakukan tahapan deployment, login gcloud terlebih dahulu.
+```bash
+gcloud auth login
 ```
 
-Struktur folder **frontend** menggunakan React dengan Vite. Konfigurasi Nginx disertakan untuk melayani aplikasi statis.
+Berikut adalah tahapan manual untuk men-deploy aplikasi ke GKE:
 
-```tree
-.
-├── Dockerfile
-├── eslint.config.js
-├── index.html
-├── nginx
-│   └── default.conf
-├── package-lock.json
-├── package.json
-├── public
-│   ├── index.html
-│   ├── vite.svg
-│   └── wondr-logo.png
-├── src
-│   ├── App.jsx
-│   ├── Dashboard
-│   │   ├── Dashboard.jsx
-│   │   └── Dashboard.module.css
-│   ├── Login
-│   │   ├── LoginForm.jsx
-│   │   └── LoginForm.module.css
-│   ├── assets
-│   │   ├── Dashboard.png
-│   │   ├── ...
-│   │   └── wondr.png
-│   ├── components
-│   │   ├── PasswordForm.jsx
-│   │   ├── ...
-│   │   └── undang.pdf
-│   ├── context
-│   │   ├── RegisterContext.jsx
-│   │   └── formContext.jsx
-│   ├── firebase.js
-│   ├── index.css
-│   ├── main.jsx
-│   ├── pages
-│   │   ├── AccountConfirmation.jsx
-│   │   ├── AddressInputPage.jsx
-│   │   ├── CreatePassword.css
-│   │   ├── CreatePasswordPage.jsx
-│   │   ├── EKTPVerification.css
-│   │   ├── EKTPVerificationPage.jsx
-│   │   ├── EmailInput.css
-│   │   ├── Home.css
-│   │   ├── Home.jsx
-│   │   ├── JenisKartuPage.css
-│   │   ├── JenisKartuPage.jsx
-│   │   ├── JenisTabunganPage.css
-│   │   ├── JenisTabunganPage.jsx
-│   │   ├── JumlahGaji.jsx
-│   │   ├── MotherName.css
-│   │   ├── MotherNamePage.jsx
-│   │   ├── OccupationPage.jsx
-│   │   ├── PenghasilanPage.jsx
-│   │   ├── PersonalDataForm.css
-│   │   ├── PersonalDataForm.jsx
-│   │   ├── PhoneInputPage.css
-│   │   ├── PhoneInputPage.jsx
-│   │   ├── WaliIdentity.css
-│   │   ├── WondrLanding.css
-│   │   ├── WondrLanding.jsx
-│   │   ├── address.css
-│   │   ├── emailInputPage.jsx
-│   │   ├── nameInput.css
-│   │   ├── nameInputPage.jsx
-│   │   ├── phoneOtpInputPage.css
-│   │   ├── phoneOtpInputPage.jsx
-│   │   ├── termsCondition.jsx
-│   │   ├── termsConditions.module.css
-│   │   ├── tujuanPembukaanRekening.jsx
-│   │   ├── undang.jsx
-│   │   ├── undang.module.css
-│   │   ├── waliFormPages.css
-│   │   ├── waliIdentityPage.jsx
-│   │   └── waliPage.jsx
-│   └── utils
-│       ├── sanitize.js
-│       └── validation.js
-├── vite.config.js
-└── wondr-logo.png
-```
+#### Langkah 0: Inisiasi Cluster GKE dengan Terraform
 
-## 2\. Infrastruktur Deployment
+Tahap ini hanya dilakukan sekali untuk membuat atau memperbarui infrastruktur *cluster*.
 
-Aplikasi ini di-deploy menggunakan kombinasi GKE, Cloud Run, dan Cloud SQL untuk memastikan skalabilitas, efisiensi, dan manajemen yang mudah.
+1. **Inisiasi Terraform**
 
-### 2.1 Google Kubernetes Engine (GKE)
-
-* **Nama Cluster**: `gke-secure-onboarding-system`
-* **Spesifikasi**:
-  * **Tipe**: `Autopilot` (secara otomatis mengelola node dan pods).
-  * **Versi**: `1.28.6-gke.1130000`.
-  * **Lokasi**: `asia-southeast1-a` (Jakarta).
-* **Deskripsi**: Cluster GKE digunakan untuk menampung *deployment* `backend-secure-onboarding-system` dan `frontend-secure-onboarding-system` serta database PostgreSQL.
-
-### 2.2 Komunikasi Antar-Komponen dalam Cluster
-
-* **Namespace**: *Deployment* dipisahkan ke dalam *namespace* `frontend` dan `backend`. Database PostgreSQL berada di *namespace* `backend`.
-* **Network Policy**: Komunikasi antar *namespace* diatur dengan `NetworkPolicy`. Berikut adalah kebijakan yang memungkinkan *traffic* dari *namespace* `frontend` ke *service backend* dengan port `8080`.
-
-    ```yaml
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    metadata:
-      name: allow-frontend-to-backend
-      namespace: backend
-    spec:
-      podSelector:
-        matchLabels:
-          app: backend
-      policyTypes:
-      - Ingress
-      ingress:
-      - from:
-        - namespaceSelector:
-            matchLabels:
-              name: frontend-app
-          podSelector:
-            matchLabels:
-              app: frontend-app
-        ports:
-        - protocol: TCP
-          port: 8080
+    ```bash
+    # Lakukan di folder `tf/.`
+    terraform init
     ```
 
-### 2.3 Deployment & Service Kubernetes
+2. **Buat Rencana Eksekusi**
 
-**a. Backend Deployment**
+    ```bash
+    terraform plan -out tfplan
+    ```
 
-* **Nama**: `backend-secure-onboarding-system-deployment`.
-* **Replicas**: 2.
-* **Image**: `asia.gcr.io/primeval-rune-467212-t9/wondr-desktop-be:1.0`.
-* **Service**: `backend-service` (Tipe: `ClusterIP`) yang mengekspos port `8080` untuk komunikasi internal.
+3. **Terapkan Konfigurasi**
 
-**b. Frontend Deployment**
+    ```bash
+    terraform apply -auto-approve tfplan
+    ```
 
-* **Nama**: `frontend-secure-onboarding-system-deployment`.
-* **Replicas**: 2.
-* **Image**: `asia.gcr.io/primeval-rune-467212-t9/wondr-desktop-fe:1.0`.
-* **Service**: `frontend-service` (Tipe: `NodePort`) yang mengekspos port `80` untuk diakses melalui Ingress.
+4. **Konfigurasi `kubectl`**
 
-**c. Database Deployment**
+    ```bash
+    # Lihat konteks saat ini
+    kubectl config current-context --project primeval-rune-467212-t9
 
-* **Nama**: `postgresql-deployment`.
-* **Image**: `postgres:13.3-alpine`.
-* **Service**: `postgresql-service` (Tipe: `ClusterIP`) untuk akses internal dari *backend*.
+    # Ubah konteks kubectl agar berinteraksi dengan cluster GKE
+    gcloud container clusters get-credentials wondr-desktop-cluster --zone asia-southeast1-a --project primeval-rune-467212-t9
+    ```
 
-### 2.4 Ingress
+#### Langkah 1: Build dan Push Docker Image
 
-* **Nama**: `secure-onboarding-ingress`.
-* **Namespace**: `frontend`.
-* **Konfigurasi**: Menggunakan Ingress GCE dengan IP statis global bernama `secure-onboarding-ip`.
-* **Tujuan**: Meneruskan semua *traffic* dari domain `wondrdesktop.my.id` ke `frontend-service` pada port `80`.
+Setelah infrastruktur siap, *image* Docker untuk *frontend* dan *backend* dibangun dan di-*push* ke Google Container Registry (GCR).
 
-### 2.5 Layanan Eksternal
+**Catatan Penting**: Pastikan file Firebase JSON sudah tersedia di direktori *frontend* dan *backend* sebelum proses *build*.
 
-Aplikasi ini menggunakan layanan eksternal untuk fungsionalitas tertentu:
+**a. Frontend**
 
-* **Verifikasi OTP SMS**: Menggunakan layanan dari **Firebase Auth**.
+* **Build Image**: Gunakan `--build-arg` untuk menyisipkan *environment variable* yang tidak bisa diatur melalui `.yaml` Kubernetes.
 
-* **Verifikator Dukcapil**: Layanan ini di-*deploy* sebagai **Cloud Run Service** dengan **Cloud SQL** sebagai databasenya. Hal ini dilakukan untuk memisahkan layanan yang spesifik dari *cluster* utama, memastikan skalabilitas yang lebih baik untuk layanan yang sifatnya terisolasi.
+    ```bash
+    # Lakukan di root folder aplikasi
+    docker build \
+      --build-arg VITE_BACKEND_BASE_URL=GANTISAYA \
+      --build-arg VITE_VERIFICATOR_BASE_URL=[https://verificator-secure-onboarding-system-441501015598.asia-southeast1.run.app](https://verificator-secure-onboarding-system-441501015598.asia-southeast1.run.app) \
+      --build-arg VITE_FIREBASE_API_KEY=AIzaSyCTXgqBktnmUo8z5VkxMuwBpLkBGZ_syj0 \
+      ...
+      -t gcr.io/model-parsec-465503-p3/frontend-secure-onboarding-system:latest
+      ./frontend-secure-onboarding-system
+    ```
 
-  * **Nama Layanan**: `verificator-secure-onboarding-system`
-  * **Endpoint**: `https://verificator-secure-onboarding-system-441501015598.asia-southeast1.run.app`
+* **Push Image**:
 
-## Informasi Detail
+    ```bash
+    docker push gcr.io/model-parsec-465503-p3/frontend-secure-onboarding-system:latest
+    ```
 
-informasi detail dari gke-cluster :
+**b. Backend**
 
-![gke-cluster-detail-info](./assets/gke-cluster-detail-info.png)
+* **Build Image**:
 
-informasi `backend-deployment`:
+    ```bash
+    docker build -t gcr.io/model-parsec-465503-p3/backend-secure-onboarding-system:latest ./backend-secure-onboarding-system
+    ```
 
-![backend-deployment-info](./assets/backend-deployment-info.png)
+* **Push Image**:
 
-infromasi `frontend-deployment`:
+    ```bash
+    docker push gcr.io/model-parsec-465503-p3/backend-secure-onboarding-system:latest
+    ```
 
-![frontend-deployment-info](./assets/frontend-deployment-info.png)
+#### Langkah 2: Apply Manifest Kubernetes
 
-informasi `postgresql-deployment`:
+Manifest Kubernetes (`.yaml` files) diterapkan untuk membuat *deployment*, *service*, dan konfigurasi lainnya di *cluster* GKE.
 
-![database-deployment-info](./assets/database-deployment-info.png)
+* **Database**:
 
-informasi `backend-service`:
+    ```bash
+    kubectl apply -f ./k8s/application/postgresql-deployment.yaml
+    kubectl apply -f ./k8s/application/postgresql-secrets.yaml
+    kubectl apply -f ./k8s/application/postgresql-service.yaml
+    ```
 
-![backend-service-info](./assets/backend-service-info.png)
+* **Backend**:
 
-informasi `frontend-service`:
+    ```bash
+    kubectl apply -f ./k8s/application/app-secrets.yaml
+    kubectl apply -f ./k8s/application/backend-configmaps.yaml
+    kubectl apply -f ./k8s/application/backend-deployment.yaml
+    kubectl apply -f ./k8s/application/backend-networkpolicy.yaml
+    ```
 
-![frontend-service-info](./assets/frontend-service-info.png)
+* **Frontend**:
 
-informasi `postgresql-service`:
+    ```bash
+    kubectl apply -f ./k8s/application/frontend-certificate.yaml
+    kubectl apply -f ./k8s/application/frontend-configmap.yaml
+    kubectl apply -f ./k8s/application/frontend-deployment.yaml
+    kubectl apply -f ./k8s/application/frontend-service.yaml    
+    ```
 
-![postgresql-service-info](./assets/postgresql-service-info.png)
+* **Network (Ingress)**:
 
-informasi `secure-onboarding-ingress`:
+    ```bash
+    kubectl delete -f ./k8s/application/ingress.yaml
+    kubectl apply -f ./k8s/application/ingress.yaml
+    ```
 
-![ingress-info](./assets/ingress-info.png)
+* **Verifikasi Deployment**:
 
-informasi service `verificator-secure-onboarding-system` :
+    ```bash
+    kubectl describe pods [nama_pods]
+    ```
 
-![verificator-info](./assets/verificator-info.png)
+---
 
-informasi `wondr-desktop-otp`:
+## 2. Deployment Otomatis dengan CI/CD
 
-![firebase-otp-sms](./assets/firebase-otp-sms.png)
+Pipeline CI/CD diimplementasikan menggunakan Jenkins untuk mengotomatisasi seluruh alur kerja, dari *checkout* kode hingga *deployment* di lingkungan produksi.
+
+### Visualisasi Pipeline
+
+Berikut adalah gambaran umum dari alur kerja CI/CD menggunakan Jenkins Declarative Pipeline:
+
+![ci-cd-pipeline](./assets/ci-cd-pipeline.png)
+
+### Tahapan dalam Pipeline
+
+1. **Source Code Checkout**: Mengambil kode sumber dari repositori *backend*, *frontend*, dan konfigurasi ops. Tahap ini diparalelkan untuk efisiensi.
+2. **Inject Secrets**: Menginjeksikan kunci rahasia (seperti Firebase Private Key) dari Jenkins Credentials ke direktori proyek.
+3. **Build Application**: Membangun aplikasi *backend* (Maven) dan *frontend* (Node.js) secara paralel.
+4. **Testing & Quality Analysis**: Menjalankan pengujian unit, analisis kualitas kode, dan pemindaian keamanan (misalnya dengan SonarQube atau OWASP ZAP) secara paralel.
+5. **Package Application**: Mengemas aplikasi yang sudah teruji.
+6. **Docker Build & Registry**: Membangun *image* Docker untuk *backend* dan *frontend*, lalu mendorongnya ke Google Container Registry (GCR) secara paralel.
+7. **Staging Deployment**: Menerapkan *image* Docker ke lingkungan *staging* untuk pengujian integrasi.
+8. **Staging Tests**: Menjalankan tes integrasi otomatis di lingkungan *staging*.
+9. **QA Approval**: Membutuhkan persetujuan manual dari tim QA sebelum melanjutkan ke produksi.
+10. **Production Deployment**: Menerapkan manifest Kubernetes (`.yaml`) ke *cluster* GKE produksi.
+11. **Production Verification**: Melakukan verifikasi pasca-deployment untuk memastikan layanan berjalan dengan baik.
+12. **Post-Deployment Report**: Menghasilkan laporan akhir dari proses deployment.
+
+### Konfigurasi Jenkins
+
+* **Lingkungan Jenkins**: Menggunakan Docker-in-Docker (*dind*) untuk menjalankan Jenkins di dalam container, yang memiliki akses ke Docker socket *host*.
+* **Plugins**: Menggunakan plugin penting seperti Git, Docker Pipeline, NodeJS, dan JDK Tool.
+* **Secrets Management**: Mengelola kredensial sensitif (GCR Service Account Key, Firebase Private Key) menggunakan fitur **Jenkins Credentials** sebagai *secret file* atau *secret text*.
+
+### Troubleshooting Umum
+
+* **Ruang Disk Penuh**: Jika proses *build* Jenkins terhenti, periksa penggunaan disk VM. Solusinya adalah meningkatkan ukuran disk VM di Google Cloud.
+* **Izin Akses**: Jika terjadi *permission denied*, pastikan user Jenkins memiliki izin yang memadai (misalnya, dengan menggunakan `chmod`) pada direktori yang relevan.
+* **IP Dinamis**: Pastikan alamat IP eksternal VM Jenkins diubah menjadi statis untuk menghindari masalah konektivitas.
+
+## Catatan
+
+* **Urutan Ingress**: Dalam konfigurasi *ingress*, urutan *path* sangat penting. *Path* yang paling spesifik, seperti `/api/auth`, harus diletakkan di atas *path* yang lebih umum, seperti `/`, untuk memastikan *routing* berjalan dengan benar.
+* **Build History**: Dokumentasikan setiap riwayat *build* di Jenkins (sukses atau gagal) dengan deskripsi yang jelas untuk mempermudah proses *debugging* dan audit.
