@@ -2,12 +2,21 @@
 
 Dokumen ini merangkum proses *deployment* aplikasi ke lingkungan *cluster* Google Kubernetes Engine (GKE), baik melalui metode manual maupun otomatis dengan CI/CD.
 
+* **Kubernetes (k8s)** adalah platform *open-source* untuk mengelola beban kerja dan layanan dalam kontainer.
+* Memudahkan untuk mengatur banyak kontainer di banyak *host*, menskalakannya sebagai layanan mikro (*microservices*), dan melakukan *deployment rollout*.
+* Merupakan kumpulan API untuk men-*deploy* kontainer pada sekelompok *node* yang disebut *cluster*.
+* Terbagi menjadi serangkaian komponen utama yang berjalan sebagai *control plane* dan serangkaian *node* yang menjalankan kontainer.
+
+**Google Kubernetes Engine (GKE)** dapat men-*deploy*, mengelola, dan menskalakan Kubernetes. Berikut adalah beberapa fitur GKE: Dikelola sepenuhnya (*fully managed*), sistem operasi dioptimalkan untuk skala cepat, GKE Autopilot mengelola konfigurasi *cluster*, pembaruan otomatis untuk memastikan *cluster* memiliki versi Kubernetes stabil terbaru, perbaikan otomatis pada *node* yang sehat, dapat menskalakan *cluster* itu sendiri, serta terintegrasi dengan Cloud Build, Google Cloud Observability, dan Virtual Private Clouds (VPC).
+
 ## 1. Deployment Manual
 
 *Deployment* manual dilakukan untuk kebutuhan *testing* atau *deployment* awal. Proses ini melibatkan serangkaian perintah baris yang dieksekusi secara berurutan.
 
 ### Langkah-langkah Deployment
+
 Sebelum melakukan tahapan deployment, login gcloud terlebih dahulu.
+
 ```bash
 gcloud auth login
 ```

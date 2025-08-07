@@ -17,7 +17,7 @@ Aplikasi "Wondr Desktop" terdiri dari empat komponen utama yang terpisah dalam d
 ├── frontend-secure-onboarding-system
 ├── ops-secure-onboarding-system
 └── verificator-secure-onboarding-system
-````
+```
 
 ### 1.1 Struktur Backend & Frontend
 
@@ -206,7 +206,7 @@ Struktur folder **frontend** menggunakan React dengan Vite. Konfigurasi Nginx di
 └── wondr-logo.png
 ```
 
-## 2\. Infrastruktur Deployment
+## 2. Infrastruktur Deployment
 
 Aplikasi ini di-deploy menggunakan kombinasi GKE, Cloud Run, dan Cloud SQL untuk memastikan skalabilitas, efisiensi, dan manajemen yang mudah.
 
@@ -250,25 +250,51 @@ Aplikasi ini di-deploy menggunakan kombinasi GKE, Cloud Run, dan Cloud SQL untuk
     ```
 
 ### 2.3 Deployment & Service Kubernetes
-
+```tree
+k8s
+├── application
+│   ├── backend-deployment.yaml
+│   ├── backend-networkpolicy.yaml
+│   ├── database-setup.sql
+│   ├── frontend-certificate.yaml
+│   ├── frontend-configmap.yaml
+│   ├── frontend-deployment.yaml
+│   ├── frontend-service.yaml
+│   ├── ingress.yaml
+│   ├── postgresql-deployment.yaml
+│   ├── postgresql-secret.yaml
+│   └── postgresql-service.yaml
+└── monitoring
+    ├── alert-deployment.yaml
+    ├── alert-rules.yaml
+    ├── alertmanager.yaml
+    ├── grafana-configmap.yaml
+    ├── grafana-service.yaml
+    ├── grafana-statefulset.yaml
+    ├── ingress.yaml
+    ├── monitoring-certificate.yaml
+    ├── prome-configmap.yaml
+    ├── prome-daemonset.yaml
+    └── prome-service.yaml
+```
 **a. Backend Deployment**
 
 * **Nama**: `backend-secure-onboarding-system-deployment`.
 * **Replicas**: 2.
-* **Image**: `asia.gcr.io/primeval-rune-467212-t9/wondr-desktop-be:1.0`.
+* **Image**: `gcr.io/model-parsec-465503-p3/backend-secure-onboarding-system:<IMAGE_TAG>`.
 * **Service**: `backend-service` (Tipe: `ClusterIP`) yang mengekspos port `8080` untuk komunikasi internal.
 
 **b. Frontend Deployment**
 
 * **Nama**: `frontend-secure-onboarding-system-deployment`.
 * **Replicas**: 2.
-* **Image**: `asia.gcr.io/primeval-rune-467212-t9/wondr-desktop-fe:1.0`.
+* **Image**: `gcr.io/model-parsec-465503-p3/frontend-secure-onboarding-system:<IMAGE_TAG>`.
 * **Service**: `frontend-service` (Tipe: `NodePort`) yang mengekspos port `80` untuk diakses melalui Ingress.
 
 **c. Database Deployment**
 
 * **Nama**: `postgresql-deployment`.
-* **Image**: `postgres:13.3-alpine`.
+* **Image**: `postgres:17-alpine`.
 * **Service**: `postgresql-service` (Tipe: `ClusterIP`) untuk akses internal dari *backend*.
 
 ### 2.4 Ingress
@@ -288,6 +314,17 @@ Aplikasi ini menggunakan layanan eksternal untuk fungsionalitas tertentu:
 
   * **Nama Layanan**: `verificator-secure-onboarding-system`
   * **Endpoint**: `https://verificator-secure-onboarding-system-441501015598.asia-southeast1.run.app`
+
+### 2.6 Monitoring Menggunakan Prometheus, Grafana, Google Kubernetes Observability, dan AlertManager
+
+Monitoring dilakukan mendapatkan visibilitas menyeluruh terhadap sistem yang berjalan pada cluster k8s.
+
+* Prometheus digunakan untuk mengumpulkan dan menyimpan metrics (<https://prometheus.wondrdesktop.my.id/query>)
+* Grafana digunakan untuk menampilkan dashboard visualisasi data metrics (<https://grafana.wondrdesktop.my.id/>)
+* Google Kubernetes Observability digunakan untuk menampilkan performance dari cluster yang digunakan.
+![alt text](image.png)
+* Alert Manager digunakan untuk memberikan alert melalui channel Discord jika terdapat anomali pada aplikasi.
+![alt text](image-1.png)
 
 ## Informasi Detail
 
